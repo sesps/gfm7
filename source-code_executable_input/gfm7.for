@@ -92,7 +92,7 @@ C    take fTab = 1.1
 C****                                                                   
 C****                
 cdddddddddddddddddddddddddddddddddddddddddddddcambiodddddddddddddddddd
-      write(6,*)'Data file ?'
+      write(6,*)'archive entry with extension?'
       read(5,2321)nombre
  2321 format(a20)
       do i=1,20
@@ -2296,7 +2296,7 @@ C****
       TPAR = T*VEL
       NBR = 2
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF(  XDTF1  .LT.  0. )  GO TO 23                                  
       IF(  Z11  .GE.  TC(3) )  GO TO 24                                 
       GO TO 22                                                          
@@ -2364,7 +2364,7 @@ C****
       TPAR = T*VEL
       NBR = 2
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( Z12 .GE. TC(3) ) GO TO 8                                      
     7 CONTINUE                                                          
       GO TO 6                                                           
@@ -2424,7 +2424,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3)  .LE.  Z21 )  GO TO 18                                  
    17 CONTINUE                                                          
       GO TO 16                                                          
@@ -2456,7 +2456,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3)  .GE.  Z21 )  GO TO 11                                  
 C****                              !Changes from here... !JDL  6-MAR-84
 C****
@@ -2528,7 +2528,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3) .GE. Z22 )  GO TO 14                                    
    13 CONTINUE                                                          
       GO TO 12                                                          
@@ -2578,7 +2578,7 @@ C****
       TPAR = T*VEL
       NBR = 4
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( XDTF2  .LT. 0. ) GO TO 33                                     
       IF( TC(3)  .GE. 0. ) GO TO 34                                     
       GO TO 32                                                          
@@ -2990,7 +2990,7 @@ C****
       TPAR = T*VEL
       NBR = 2
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( Z12 .GE. TC(3) ) GO TO 8                                      
     7 CONTINUE                                                          
       GO TO 6                                                           
@@ -3049,7 +3049,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3)  .LE.  Z21 )  GO TO 18                                  
    17 CONTINUE                                                          
       GO TO 16                                                          
@@ -3079,7 +3079,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3)  .GE.  Z21 )  GO TO 11                                  
    10 CONTINUE                                                          
       GO TO 9                                                           
@@ -3136,7 +3136,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3) .GE. Z22 )  GO TO 14                                    
    13 CONTINUE                                                          
       GO TO 12                                                          
@@ -4482,7 +4482,7 @@ C****
       TPAR = T*VEL
       NBR = 2
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( Z2  .LE. TC(3) ) GO TO 8                                      
     7 CONTINUE                                                          
       GO TO 6                                                           
@@ -4668,7 +4668,7 @@ C****
       TPAR = T*VEL
       NBR = 2
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( Z12 .GE. TC(3) ) GO TO 8                                      
     7 CONTINUE                                                          
       GO TO 6                                                           
@@ -4718,7 +4718,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3)  .LE.  Z21 )  GO TO 18                                  
    17 CONTINUE                                                          
       GO TO 16                                                          
@@ -4750,7 +4750,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
    19 CONTINUE                                                          
       IF( TC(3)  .GE.  Z21 )  GO TO 11                                  
    10 CONTINUE                                                          
@@ -4790,7 +4790,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3) .GE. Z22 )  GO TO 14                                    
    13 CONTINUE                                                          
       GO TO 12                                                          
@@ -5488,7 +5488,7 @@ C****
       TPAR = T*VEL
       NBR = 2
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( Z12 .GE. TC(3) ) GO TO 8                                      
     7 CONTINUE                                                          
       GO TO 6                                                           
@@ -5542,7 +5542,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3)  .LE.  Z21 )  GO TO 18                                  
    17 CONTINUE                                                          
       GO TO 16                                                          
@@ -7981,7 +7981,7 @@ c
 7     tau = tau0
       tau0 = 0.
       go to 20
-10    if (tau.lt.1000.) go to 20
+10    if (tau.lt.10000.) go to 20
       print 2000,tau
 2000  format (//10X,'****STOP CALCULATION****'/
      2          10X,'  tau(small angle) =',F12.5,/
