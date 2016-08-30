@@ -9,7 +9,8 @@ C****
 C**** CHANGES ADDED AT LNL ARE MARKED:                   !JDL 10-NOV-83
 C****
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8   K                 
+      REAL*8 BX, BY, BZ, K, TC, DTC 
+      integer kk
 cdddddddddddddddddddddddddddddddddddddddddddddcambiodddddddddddddddddd
       character*20 nombre,nomplt,nomgrf,nommca,nomdat,nomlis
 cdddddddddddddddddddddddddddddddddddddddddddddcambiodddddddddddddddddd
@@ -42,9 +43,15 @@ c      REAL*4 DAET, TYME
       COMMON  /BLCK61/  DEDX,ALPHAK,TOLD2,DEDXQ
       COMMON  /BLCK62/  GASENE,GASVEL,TOLD,GASL
       COMMON  /BLCK63/  ISEED
-      include 'rtcomm65.f'
+c      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+
       COMMON  /BLCK66/  tfwopt,taufct,alffct,TBAR,THWHM,tau0
       common  /blck70/  vel0,en0,pm0
+c-ddc to fix complaint about common blocksize
+      integer*8 icalc
+
       common  /blck71/  gasopt,zgas125,zgas18,dreldee,enold,icalc
       DIMENSION NCOLS(10,6), VECJ(10), VECK(10)          !JDL 31-OCT-84
 C*JDL DIMENSION DAET(3), TYME(2)                                        
@@ -66,6 +73,9 @@ C*JDL DIMENSION NWORD(15),DATA( 75,30), IDATA(30),NTITLE(20),ITITLE(30)
      5             9, 6, 4, 6, 3, 0, 0, 0, 0, 0/         !JDL 17-NOV-83
       DATA C /3.D10/                                                    
       DATA TYME/ '    ', '    ' /
+c-ddc init data for date, so 'junk' isn't put in output files.
+      DATA daet/ '    ', '    ','    ' /
+
       character *4 nt1,nt2,nwd
       character *2 foil                                      !MP 27-jul-
       DATA NT1, NT2/' RT8','2.0 '/
@@ -82,32 +92,47 @@ C    take fTab = 1.1
 C****                                                                   
 C****                
 cdddddddddddddddddddddddddddddddddddddddddddddcambiodddddddddddddddddd
-      write(6,*)'¿archivo de entrada con extension?'
+      write(6,*)'Data file ?'
       read(5,2321)nombre
  2321 format(a20)
       do i=1,20
         if(nombre(i:i).eq.'.') then
-         k=i-1
+         kk=i-1
         else
         endif
       enddo
-      nomplt(1:k)=nombre(1:k)
-      nomplt(k+1:k+4)='.plt'
-      nomdat(1:k)=nombre(1:k)
-      nomdat(k+1:k+4)='.dat'
-      nomgrf(1:k)=nombre(1:k)
-      nomgrf(k+1:k+4)='.grf'
-      nommca(1:k)=nombre(1:k)
-      nommca(k+1:k+4)='.mca'
-      nomlis(1:k)=nombre(1:k)
-      nomlis(k+1:k+4)='.lis'
+
+      nomdat(1:20)=nombre(1:20)
+c      nomdat(1:kk)=nombre(1:kk)
+      nomdat(kk+1:kk+5)='.dat'
+      nomdat(lnblnk(nomdat)+1:lnblnk(nomdat)+1)=''
+
+      nomplt(1:20)=nombre(1:20)
+c      nomplt(1:kk)=nombre(1:kk)
+      nomplt(kk+1:kk+5)='.plt'
+      nomplt(lnblnk(nomplt)+1:lnblnk(nomplt)+1)=''
+
+      nomgrf(1:20)=nombre(1:20)
+c      nomgrf(1:kk)=nombre(1:kk)
+      nomgrf(kk+1:kk+5)='.grf'
+      nomgrf(lnblnk(nomgrf)+1:lnblnk(nomgrf)+1)=''
+
+      nommca(1:20)=nombre(1:20)
+c      nommca(1:kk)=nombre(1:kk)
+      nommca(kk+1:kk+5)='.mca'
+      nommca(lnblnk(nommca)+1:lnblnk(nommca)+1)=''
+
+      nomlis(1:20)=nombre(1:20)
+c      nomlis(1:kk)=nombre(1:kk)
+      nomlis(kk+1:kk+5)='.lis'
+      nomlis(lnblnk(nomlis)+1:lnblnk(nomlis)+1)=''
       
 
-	open(unit=10,name=nomdat,status='old')  
-	open(unit=2,name=nomgrf,status='new')  
-	open(unit=3,name=nommca,status='new')  
-	open(unit=4,name=nomlis,status='new')  
-	open(unit=11,name=nomplt,status='new')  
+	open(unit=10,file=nomdat,status='old')  
+	open(unit=2,file=nomgrf,status='unknown')  
+	open(unit=3,file=nommca,status='unknown')  
+	open(unit=4,file=nomlis,status='unknown')  
+	open(unit=11,file=nomplt,status='unknown')  
                           
 cdddddddddddddddddddddddddddddddddddddddddddddcambiodddddddddddddddddd
                                                    
@@ -607,6 +632,7 @@ C****
      2     SEC1,SEC2,SEC3,SEC4,SEC5,SEC6,SEC7,SEC8
 c      ISEED = INT(100.0*SECNDS(0.0))
       ISEED = INT(100.0*SECNDS(0.0))
+      dummy = RAN(iseed)
       IF( NRXS .EQ. 11 )  ISEED = 29
       IF(( NRXS .NE. 13 ) .OR. ( SEED .EQ. 0.0 )) GO TO 149
       IF( SEED .LT. 4.0D9 ) ISEED = IDINT( SEED - 1.0D9 )
@@ -829,14 +855,14 @@ C****
       VYI(K)  = VYI(K-1)
  1541 DELP(K) = DELP(K-1)
       IF( MCP .NE. 0 ) GO TO 1545
-      XI(J)  = SXMX*(2.0*RAN(ISEED)-1.0)    !RANDOM RAYS FOR SPECTRA
-      YI(J)  = SYMX*(2.0*RAN(ISEED)-1.0)
+      XI(J)  = SXMX*(2.0*RAN(0)-1.0)    !RANDOM RAYS FOR SPECTRA
+      YI(J)  = SYMX*(2.0*RAN(0)-1.0)
       ZI(J)  = 0.0
-      VXI(J) = STMX*(2.0*RAN(ISEED)-1.0)
-      VYI(J) = SPMX*(2.0*RAN(ISEED)-1.0)
+      VXI(J) = STMX*(2.0*RAN(0)-1.0)
+      VYI(J) = SPMX*(2.0*RAN(0)-1.0)
       VZI(J) = 0.0
-      DELP(J)= SDMX*(2.0*RAN(ISEED)-1.0)
-      DELM   = SUMX*(2.0*RAN(ISEED)-1.0)
+      DELP(J)= SDMX*(2.0*RAN(0)-1.0)
+      DELM   = SUMX*(2.0*RAN(0)-1.0)
       PMASS  = PM0+ANINT(PM0*DELM/100.0)
       GO TO 155
  1545 XI(J)  = VECJ(1)    !RAYS FOR CONTOUR GRID
@@ -1029,9 +1055,9 @@ c
       XOJ  = XO(J)
       VXOJ = VXO(J)
       DEOJ = 100.0*(ENERGY - EN0)/EN0
-      IF(DXHW .NE. 0.0) XOJ  = XOJ +DXHW*RANDOM(K,ISEED)
-      IF(DTHW .NE. 0.0) VXOJ = VXOJ+DTHW*RANDOM(K,ISEED)
-      IF(DEHW .NE. 0.0) DEOJ = DEOJ+DEHW*RANDOM(K,ISEED)
+      IF(DXHW .NE. 0.0) XOJ  = XOJ +DXHW*RANDOM(1,ISEED)
+      IF(DTHW .NE. 0.0) VXOJ = VXOJ+DTHW*RANDOM(1,ISEED)
+      IF(DEHW .NE. 0.0) DEOJ = DEOJ+DEHW*RANDOM(1,ISEED)
       VXOT = VXOJ +  SEC1*XOJ
       XO(J) = XOJ + (SEC2*VXOT*VXOT+SEC3*VXOT*DEOJ+SEC4*DEOJ*DEOJ)
      1            + (SEC5*VXOT*VXOT+SEC6*VXOT*DEOJ+SEC7*DEOJ*DEOJ)*VXOT
@@ -1226,7 +1252,7 @@ C**** Changes from here ...                              !JDL 31-OCT-84
       IF( LNEN .EQ. 0 )  GO TO 9600                      !JDL  1-DEC-83 
       IF((NEN .EQ. 1 ) .AND. (NLOOP .EQ. 0)) GO TO 9600
       PRINT 105, NTITLE                                                 
-      CALL TIME(TYME)
+C      CALL TIME(TYME)
       PRINT 117, DAET, TYME                                             
 C*IBM CALL WHEN(DAET)
       CALL MPRNT( NEN, WIDTH )                           !JDL  1-DEC-83 
@@ -1254,7 +1280,7 @@ C****
       IF(KUPLE .EQ. 0) GO TO 9650
       DO 9620 J=NPASS,NLOOP
       IF(LOOPSV(4,J) .NE. KUPLE) GO TO 9620
-      IF((KUPLE .EQ. 4H    ) .AND. (J .NE. NPASS)) GO TO 9620
+      IF((KUPLE .EQ. 4    ) .AND. (J .NE. NPASS)) GO TO 9620
       IF(SPASS .EQ. 0.0) LOOPSV(4,J)=0
       INO=LOOPSV(1,J)
       IJ= LOOPSV(5,J)
@@ -1317,7 +1343,7 @@ C**** B12 = B(-1,-1 )
 C****                                                                   
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8  NDX, K                                                    
+      REAL*8  NDX, BX, BY, BZ, K, TC, DTC
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK20/  NDX,BET1,GAMA,DELT,CSC                          
       COMMON  /BLCK21/  RCA,DELS,BR,S2,S3,S4,S5,S6,S7,S8,SCOR           
@@ -1560,7 +1586,7 @@ C**** MTYP=5  :    UNIFORM FIELD, CIRCULAR POLE OPTION
 C****                                                                   
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8  NDX, K                                                    
+      REAL*8  NDX, BX, BY, BZ, K, TC, DTC 
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK20/  NDX,BET1,GAMA,DELT,CSC                          
       COMMON  /BLCK21/  RCA,DELS,BR,S2,S3,S4,S5,S6,S7,S8,SCOR           
@@ -1660,7 +1686,7 @@ C****  CALCULATES B AND E FIELDS
 C****                                                                   
 C****                                                                   
       IMPLICIT     REAL*8 (A-H,O-Z)                                     
-      REAL*8 K                                                          
+      REAL*8 BX, BY, BZ, K, TC, DTC
       COMMON /BLCK10/  BX, BY, BZ, K, TC, DTC                           
       COMMON /BLCK11/  EX, EY, EZ, QMC, IVEC                            
       COMMON /BLCK71/  CB0,CB1,CB2,CB3,CB4,CB5                          
@@ -1758,7 +1784,7 @@ C****
 C**** CALCULATION OF FIELD COMPONENTS FOR EACH PURE MULTIPOLE           
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8 K                                                          
+      REAL*8 BX, BY, BZ, K, TC, DTC
       COMMON  /BLCK 7/ NCODE                                            
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK50/  D, GRAD, S, BT                                  
@@ -1883,8 +1909,8 @@ C**** B12 = B(-1,-1 )
 C****                                                                   
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8  K, L                                                      
-      COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
+      REAL*8  BX, BY, BZ, K, TC, DTC, L
+      COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                         
       COMMON  /BLK100/  W, L, D, DG, S, BF, BT                          
       COMMON  /BLK101/  C0, C1, C2, C3, C4, C5, C6, C7, C8              
       DIMENSION TC(6), DTC(6)                                           
@@ -1937,7 +1963,7 @@ C**** 6 - DODECAPOLE  (GRAD5)
 C****                                                                   
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8 K                                                          
+      REAL*8 BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK90/  D, S, BT, GRAD1,GRAD2,GRAD3,GRAD4,GRAD5         
       COMMON  /BLCK91/  C0, C1, C2, C3, C4, C5                          
@@ -2031,7 +2057,7 @@ C**** M.W.GARRETTT  JOURNAL OF APP. PHYS. 34,(1963),P2567
 C****                                                                   
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8 K                                                          
+      REAL*8 BX, BY, BZ, K, TC, DTC  
       DIMENSION  TC(6), DTC(6)                                          
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK30/  BF ,      AL, RAD                               
@@ -2098,7 +2124,7 @@ C****
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
       integer bflag
-      REAL*8  K                                                         
+      REAL*8  BX, BY, BZ, K, TC, DTC 
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK11/  EX, EY, EZ, QMC, IVEC                           
@@ -2106,7 +2132,9 @@ C****
      1                  QFWHM,RHOGAS,GASK,EMASS,GASMFP,JRAY,Q00,NPASG   
       COMMON  /BLCK61/  DEDX,ALPHAK,TOLD2,DEDXQ
       COMMON  /BLCK62/  GASENE,GASVEL,TOLD,GASL
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
       DIMENSION DTCGAS(3)
       DIMENSION TC(6), DTC(6)                                           
       DATA  C /3.D10 /,NSK2MX/10/                                       
@@ -2158,7 +2186,7 @@ C****
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
 c      REAL*4 DAET, TYME                                  !JDL 31-OCT-84
-      REAL*8  LF1, LF2, LU1, K, NDX                                     
+      REAL*8  LF1, LF2, LU1, K, NDX,bx,by,bz,tc,dtc                      
       EXTERNAL BDIP                                                     
       include 'rtcomm0.f'
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
@@ -2643,12 +2671,19 @@ c     but velocity changes might give wrong results (though small:
 c     velocity changes high: lots of gas --> lots of collisions
 c     thin gas: velocity changes between charge changing is small)
 c
+
+c-ddc clearly repeatedly enters, and changes a values 'curdst', 'coldst'
+c     which are neither in common blocks or 'save'd 
+
       IMPLICIT REAL*8(A-H,O-Z)                                          
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
       COMMON  /BLCK60/  GAS,AGAS,ZGAS,ZION,PRESS,GASSIG,QAVER,  !***MP 1
      1                  QFWHM,RHOGAS,GASK,EMASS,GASMFP,JRAY,Q00,NPASG   
       COMMON  /BLCK63/  ISEED
 c     COMMON  /BLCK65/QBAR,DELSQR,ACAPT,ALOS,NSK1,NSK2,SIGC,SIGT,ATBCC
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+
       DATA NPASG/0/
 c
       real*8 curdst			! distance since previous collis
@@ -2659,7 +2694,7 @@ c					!   collision
 c
 c*****
 c     if we are here the first time, we have to setup first collision
-c     (could GOTO r=ran(iseed), and save some instructions, but what if
+c     (could GOTO r=ran(0), and save some instructions, but what if
 c     first coldst .le. vel*dt ?  OK, than we have lots of collisions ..
 c
       curodst=curdst			! remember where we are
@@ -2668,7 +2703,7 @@ c
       h=(coldst-curodst)/vel		! Don't go that far.
       iqsw=1				! tell it there'll be a collisio
       curdst=0.				! we just had one next time
-      r = ran(iseed)			! where will be the following on
+      r = ran(0)			! where will be the following on
       coldst = -dlog(1.0D0-r)*gasmfp
       return
 c
@@ -2677,7 +2712,7 @@ c
       entry discol0
 c
       curdst=0.				! we just are starting
-      coldst=-dlog(1.0D0-ran(iseed))*gasmfp ! there will be the 1st coll
+      coldst=-dlog(1.0D0-ran(0))*gasmfp ! there will be the 1st coll
       return
 c
 c*****
@@ -2687,7 +2722,7 @@ c      so that integration didn't terminate within 10000 steps.
 c
 c      IF (NPASG.GT.0) GO TO 10
 c      IQSW = 1
-c      R = RAN(ISEED)
+c      R = RAN(0)
 c      DIST = -DLOG(1.-R)*GASMFP
 c      H = DIST/VEL
 c      IF (H.LE.DT) RETURN
@@ -2754,10 +2789,10 @@ C****   CALCULATES E-FIELD COMPONENTS FOR A CYLINDRICAL
 C****   ELECTROSTATIC DEFLECTOR
 C****
         IMPLICIT REAL*8 (A-H, O-Z)
-        REAL*8 K
+        REAL*8 K,bx,by,bz,tc,dtc
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK11/  EX, EY, EZ, QMC, IVEC                           
-      COMMON  /BLCK20/ EC2, EC4, WE, WC
+      COMMON  /BLCK20/ EC2, EC4, WE, WC, dum
       COMMON  /BLCK22/  D, DG, S, EF, ET                                
       COMMON  /BLCK23/  C0, C1, C2, C3, C4, C5                          
       COMMON  /BLCK24/  RB, XC, ZC                                      
@@ -2843,14 +2878,14 @@ C****
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
 c      REAL*4 DAET, TYME                                  !JDL 31-OCT-84
-      REAL*8  LF1, LF2, LU1, K                                          
+      REAL*8  LF1, LF2, LU1, K,bx,by,bz,tc,dtc                      
       EXTERNAL EDIP                                                     
       include 'rtcomm0.f'
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
       COMMON  /BLCK 5/  XA, YA, ZA, VXA, VYA, VZA                       
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK11/  EX, EY, EZ, QMC, IVEC                           
-      COMMON  /BLCK20/ EC2, EC4, WE, WC
+      COMMON  /BLCK20/ EC2, EC4, WE, WC, dum
       COMMON  /BLCK22/  D, DG, S, EF, ET                                
       COMMON  /BLCK23/  C0, C1, C2, C3, C4, C5                          
       COMMON  /BLCK24/  RB, XC, ZC                                      
@@ -3174,7 +3209,7 @@ C**** CALCULATE S; DETERMINE E-FIELD IN FRINGE REGIONS
 C****
       IMPLICIT REAL*8(A-H,O-Z)
       REAL*8 K
-      COMMON  /BLCK20/ EC2, EC4, WE, WC
+      COMMON  /BLCK20/ EC2, EC4, WE, WC, dum
       COMMON  /BLCK22/  D, DG, S, EF, ET                                
       COMMON  /BLCK23/  C0, C1, C2, C3, C4, C5                          
       COMMON  /BLCK24/  RB, XC, ZC                                      
@@ -3197,7 +3232,7 @@ C****
       SUBROUTINE FB01AD(C,  VK,VE)                                      
       IMPLICIT REAL*8(A-H,O-Z)                                          
 C*IBM REAL*8 XLG/  Z7FFFFFFFFFFFFFFF /                                  
-      REAL * 8 XLG/'7FFFFFFFFFFFFFFF'X/                                 
+      REAL * 8 XLG/1E20/                                 
       D=1D0-C                                                           
       IF(D .GT. 0D0)E=-DLOG(D)                                          
 C**** HARWELL VERSION OF FB01AD                                         
@@ -3239,7 +3274,7 @@ C****
       END                                                               
       SUBROUTINE FB02AD(CAYSQ,SINP,COSP,E,F)                            
 C                                                                       
-      IMPLICITREAL*8(A-H,O-Z)                                           
+      IMPLICIT REAL*8(A-H,O-Z)                                           
       PHI=DATAN(SINP/COSP)                                              
       IF(CAYSQ*SINP*SINP-0.5D0)1,1,5                                    
     1 H=1.0D0                                                           
@@ -3312,7 +3347,7 @@ C
       END                                                               
       SUBROUTINE FB03AD( GN,CACA,P )                                    
 C====== 23/03/72 LAST LIBRARY UPDATE                                    
-      IMPLICITREAL*8(A-H,O-Z)                                           
+      IMPLICIT REAL*8(A-H,O-Z)                                           
       IF(GN)1,2,2                                                       
     1 IF(CACA)3,3,4                                                     
     3 P=1.5707963268/DSQRT(1.D0-GN)                                     
@@ -3348,7 +3383,7 @@ C====== 23/03/72 LAST LIBRARY UPDATE
       END                                                               
       FUNCTION FDEDX( QION )
       IMPLICIT REAL*8(A-H,O-Z)
-      REAL*4 stop,IZ,IM,IEIN,IZTGT                                      
+      REAL*8 stop,IZ,IM,IEIN,IZTGT                                      
       DIMENSION  SC(92)                                                 
       COMMON  /SHELLC/SC                                                
       COMMON  /BLCK60/  GAS,AGAS,ZGAS,ZION,PRESS,GASSIG,QAVER,  !***MP 1
@@ -3357,7 +3392,9 @@ C====== 23/03/72 LAST LIBRARY UPDATE
       COMMON  /BLCK61/  DEDX,ALPHAK,TOLD2,DEDXQ
       COMMON  /BLCK62/  GASENE,GASVEL,TOLD,GASL
       COMMON  /BLCK63/  ISEED
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
       DATA VEL1/0./,DEDX2/1./,C/3.D10/,PROTM/938.211/
 C       
 C**** 
@@ -3405,7 +3442,8 @@ C
       tprevb = x-tfactor*dt
       RETURN                                                            
  20   IF (JRAY*GAS.EQ.0.) GO TO 25
-c     IF (DT.LE.0.) GO TO 25			! negative is ok for dis
+      IF (DT.LE.0.) GO TO 25 ! negative is ok for dis
+c     IF (DT.LE.0.) GO TO 25 ! IW not for me....
       CALL DISCOL(DT,H,IQSW)
       HALFH = 0.5*H
  25   CONTINUE
@@ -3476,7 +3514,7 @@ c     IF (DT.LE.0.) GO TO 25			! negative is ok for dis
       END                                                               
       FUNCTION FSDEDX( ztgt,atgt )
       IMPLICIT REAL*8(A-H,O-Z)
-      REAL*4 stops,IZ,IM,IEIN,IZTGT,iatgt                       !MP 29-j
+      REAL*8 stops,IZ,IM,IEIN,IZTGT,iatgt                       !MP 29-j
       DIMENSION  SC(92)                                                 
       COMMON  /SHELLC/SC                                                
       COMMON  /BLCK60/  GAS,AGAS,ZGAS,ZION,PRESS,GASSIG,QAVER,  !***MP 1
@@ -3485,7 +3523,9 @@ c     IF (DT.LE.0.) GO TO 25			! negative is ok for dis
       COMMON  /BLCK61/  DEDX,ALPHAK,TOLD2,DEDXQ
       COMMON  /BLCK62/  GASENE,GASVEL,TOLD,GASL
       COMMON  /BLCK63/  ISEED
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
       DATA VEL1/0./,DEDX2/1./,C/3.D10/,PROTM/938.211/
 C       
 C**** 
@@ -3518,7 +3558,8 @@ C
 
       SUBROUTINE GASINT 
       IMPLICIT REAL*8(A-H,O-Z)
-      REAL*8 K
+      REAL*8 K,bx,by,bz,tc,dtc
+      DIMENSION TC(6), DTC(6)
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK11/  EX, EY, EZ, QMC, IVEC                           
@@ -3527,7 +3568,9 @@ C
       COMMON  /BLCK61/  DEDX,ALPHAK,TOLD2,DEDXQ
       COMMON  /BLCK62/  GASENE,GASVEL,TOLD,GASL
       COMMON  /BLCK63/  ISEED
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
       COMMON  /BLCK66/  tfwopt,taufct,alffct,TBAR,THWHM,tau0
       common  /blck71/  gasopt,zgas125,zgas18,dreldee,enold,icalc
       data drel0,dee0/0.05,0.005/
@@ -3576,14 +3619,18 @@ c
       dedxq = dedx*(q0/qbar)**2
       RETURN
       END
-       FUNCTION IRND(X)         
+       FUNCTION IRND(X)
+c-ddc 
+      IMPLICIT REAL*8(A-H,O-Z)
 C 
 C***********************************      
 C 
+
        IS=-1
        IF(X.GE.0.) IS=1         
        H=ABS(X)       
-       I=IFIX(H)      
+c-ddc       I=IFIX(H)      
+       I=IDINT(H)      
        IF((H-FLOAT(I)).GE.0.5) I=I+1      
        IRND=IS*I      
        RETURN         
@@ -3849,7 +3896,7 @@ C****
 C****                                                                   
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8  K, L                                                      
+      REAL*8  K, L,bbx,by,bz,tc,dtc    
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLK100/  W, L, D, DG, S, BF, BT                          
       COMMON  /BLK101/  C0, C1, C2, C3, C4, C5, C6, C7, C8              
@@ -3878,7 +3925,7 @@ C****
 c      REAL*4 DAET, TYME                                  !JDL 31-OCT-84
       character *4 nwd
       REAL*8 KT, LP                                                     
-      REAL*8    L(2,50), LX(2,12), LD(6)                 !JDL 15-NOV-83 
+      character*8    L(2,36), LX(2,12), LD(6)                 !JDL 15-NOV-83 
       LOGICAL LPLT
       COMMON  /BLCK00/  LPLT
       include 'rtcomm0.f'
@@ -3916,7 +3963,7 @@ c      REAL*4 DAET, TYME                                  !JDL 31-OCT-84
      E           'X/TH**5 ','       =','X/TH**3*','PH**2  =',           
      F           'X/TH*PH*','*4     =','T/TH**5 ','       =',           
      G           'T/TH**3*','PH**2  =','T/TH*PH*','*4     =',           
-     H           'X/T**2+T','2*X/T**4','X/T**3+T','2*X/T**5',28*0./     
+     H           'X/T**2+T','2*X/T**4','X/T**3+T','2*X/T**5'/     
       DATA  LX / 'ENERGY(M','EV)    =','XINT(CM)','       =',           
      1           'YINT(CM)','       =','ZINT(CM)','       =',           
      2           'TH  (MR)','       =','PHI (MR)','       =',           
@@ -4251,7 +4298,7 @@ C****
       KUPLE=LOOPSV(4,NPASS)
       DO 204 J=NPASS,NLOOP
       IF(LOOPSV(4,J) .NE. KUPLE) GO TO 204
-      IF((KUPLE .EQ. 4H    ) .AND. (J .NE. NPASS)) GO TO 204
+      IF((KUPLE .EQ. 4    ) .AND. (J .NE. NPASS)) GO TO 204
       INO =LOOPSV(1,J)
       IROW=LOOPSV(2,J)
       ICOL=LOOPSV(3,J)
@@ -4836,7 +4883,7 @@ C**** B12 = B(-1,-1 )
 C****                                                                   
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8  NDX, K                                                    
+      REAL*8  NDX, BX, BY, BZ, K, TC, DTC
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK20/  NDX,BET1,GAMA,DELT,CSC                          
       COMMON  /BLCK21/  RCA,DELS,BR,S2,S3,S4,S5,S6,S7,S8,SCOR           
@@ -4989,7 +5036,7 @@ C****
 C****                                                                   
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
-      REAL*8  NDX, K                                                    
+      REAL*8  NDX, BX, BY, BZ, K, TC, DTC
       COMMON  /BLCK10/  BX, BY, BZ, K, TC, DTC                          
       COMMON  /BLCK20/  NDX,BET1,GAMA,DELT,CSC                          
       COMMON  /BLCK21/  RCA,DELS,BR,S2,S3,S4,S5,S6,S7,S8,SCOR           
@@ -5120,7 +5167,7 @@ C****
       S1Y = VYA/VZA                                                     
       TT = T
       VEL1 = VEL
-      VZA1 = VZA
+c-ddc vza1 is only used ONCE, and THIS was UNDONE in j=2 case!      VZA1 = VZA
       S1XP = DATAN2( VXA,VZA )                                          
       COS1 =DCOS(S1XP)                                                  
       SIN1 =DSIN(S1XP)                                                  
@@ -5161,7 +5208,9 @@ C****
 C****
 C**** FLIGHT PATH AND TIME FOR RAY-1 IN FOCAL AXIS SYSTEM
 C****
-      TT = TT + ZZZZ/DABS(VZA1)
+c-ddc vza1 is only used HERE, and was uninitialized in j=2 case!
+c      VZA1 = VZA      TT = TT + ZZZZ/DABS(VZA1)
+      TT = TT + ZZZZ/DABS(VZA)
       TT1 = TT*1.0D+09
       TL1 = TT*VEL1
       IF( NP  .GT. 100 ) GO TO 17                                       
@@ -5260,6 +5309,9 @@ C****
       RETURN                                                            
       END                                                               
       SUBROUTINE PLTOUT ( JEN, J, NUM )
+c
+c-ddc clearly repeatedly enters, and changes a arrays (graph,icor,..)
+c     which are neither in common blocks or 'save'd 
 C****
 C****
 C**** THIS ROUTINE STORES STEP-BY-STEP POSITION INFORMATION FOR EACH
@@ -5269,7 +5321,7 @@ C****
       IMPLICIT REAL*8 (A-H,O-Z)
       integer maxpoint
       parameter (maxpoint=5000)
-      REAL*8 K
+      REAL*8 BX, BY, BZ, K, TC, DTC
       LOGICAL LPLT
       COMMON  /BLCK00/ LPLT
       COMMON  /BLCK 5/  XA, YA, ZA, VXA, VYA, VZA
@@ -5326,7 +5378,7 @@ C****
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
 c      REAL*4 DAET, TYME                                  !JDL 31-OCT-84
-      REAL*8  LF1, LF2, LU1, K, L                                       
+      REAL*8  LF1, LF2, LU1, L, BX, BY, BZ, K, TC, DTC
       include 'rtcomm0.f'
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
       COMMON  /BLCK 5/  XA, YA, ZA, VXA, VYA, VZA                       
@@ -5641,7 +5693,8 @@ C     WHEN NFOLD1 AND/OR NFOLD2 ARE NOT ZERO (OR ONE), +/* CHARACTERS
 C     ARE REPLACED BY SUCCESSIVE LETTERS OF THE ALPHABET (UPPER CASE
 C     FOR Y(1), LOWER CASE FOR Y2(I)), A NEW CHARACTER BEING USED
 C     FOR EACH FOLDING OF THE DATA IN MULTIPLES OF NFOLD.
-C
+C 
+      IMPLICIT REAL*8(A-H,O-Z)                                          
       INTEGER XLABEL,A
       DIMENSION X(N),Y1(N),Y2(N),XLABEL(16),LCHAR1(27),LCHAR2(27)
       DIMENSION A(119),XNL(13),YNL(13),D(4),LABL(4)
@@ -5715,7 +5768,7 @@ C
       FXM=(XMIN-UNX/2.0)/BIGDX
       FX=FXM*BIGDX
       IF(ABS(FXM) .LT. 1.0E6)
-     1  FX=FLOAT(INT(FXM+SIGN(0.5,FXM)))*BIGDX
+     1  FX=FLOAT(INT(FXM+SIGN(5D-1,FXM)))*BIGDX
       IF(INT(BX*(XMIN-FX)+0.5) .LT. 1) FX=FX-BIGDX
       IF(INT(BX*(XMAX-FX)+0.5) .LT. 119) GO TO 120
       GO TO 180
@@ -5730,7 +5783,7 @@ C
       FYM=(YMIN-UNY/2.0)/BIGDY
       FY=FYM*BIGDY
       IF(ABS(FYM) .LT. 1.0E6)
-     1  FY=FLOAT(INT(FYM+SIGN(0.5,FYM)))*BIGDY
+     1  FY=FLOAT(INT(FYM+SIGN(5D-1,FYM)))*BIGDY
       IF(INT(BY*(YMAX-FY)+0.5) .LT. 55) GO TO 200
 C
 C         (2C). PLOT EXCEEDS SPACE, CHANGE SCALE AND REPEAT.
@@ -5811,8 +5864,8 @@ C
 C*JDL IF(I .EQ. 2) GO TO 530    !REMOVE "RADIANS" LABEL ON Y-AXIS.
       IF(MOD(I,5) .EQ. 0) GO TO 580
       IF(I .NE. 1) GO TO 550
-      YEX=ALOG10(YEX)
-      J=INT(YEX+SIGN(0.1,YEX))
+      YEX=DLOG10(YEX)
+      J=INT(YEX+SIGN(1D-1,YEX))
       PRINT 520, J,A
   520 FORMAT(1H ,2X,2H E,I3,1H+,119A1,1H+)
       GO TO 600
@@ -5832,8 +5885,8 @@ C
       PRINT 450, YNL(1)
       PRINT 690, (XNL(L),L=1,13)
   690 FORMAT (1H ,13(4X,F6.2))
-      XEX=ALOG10(XEX)
-      J=INT(XEX+SIGN(0.1,XEX))
+      XEX=DLOG10(XEX)
+      J=INT(XEX+SIGN(1D-1,XEX))
   700 PRINT 710, XLABEL,J
   710 FORMAT(1H ,20X,16A4,41X,2H E,I3)
       RETURN
@@ -5846,7 +5899,7 @@ C****
       IMPLICIT REAL*8(A-H,O-Z)                                          
 c      REAL*4   DAET, TYME                                !JDL 31-OCT-84
       character *4 nwd
-      REAL*4   HORSV(1000), VERSV(1000), DD(4)           !JDL  1-DEC-83
+      REAL*8   HORSV(1000), VERSV(1000), DD(4)           !JDL  1-DEC-83
       include 'rtcomm0.f'
       COMMON  /BLCK 1/  XI, YI, ZI, VXI, VYI, VZI, DELP, DELM      !JDL 
       COMMON  /BLCK 2/  XO, YO, ZO, VXO, VYO, VZO, RTL(100),RLL(100)    
@@ -5867,7 +5920,9 @@ c      REAL*4   DAET, TYME                                !JDL 31-OCT-84
      1                  QFWHM,RHOGAS,GASK,EMASS,GASMFP,JRAY,Q00,NPASG   
       COMMON  /BLCK62/  GASENE,GASVEL,TOLD,GASL
       COMMON  /BLCK61/  DEDX,ALPHAK,TOLD2,DEDXQ
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
 C*JDL DIMENSION DATA(  75,30 ), ITITLE(30)               !JDL 17-NOV-83 
       DIMENSION VECK(10), JV(8), NBIN(26)                !JDL 31-OCT-84
       DIMENSION LABEL(48), NLNS(9)                       !JDL 31-OCT-84
@@ -5887,8 +5942,8 @@ C*JDL DIMENSION DATA(  75,30 ), ITITLE(30)               !JDL 17-NOV-83
       DIMENSION XO(100), YO(100), ZO(100), VXO(100), VYO(100), VZO(100) 
       DIMENSION XI(100), YI(100), ZI(100), VXI(100), VYI(100), VZI(100),
      1        DELP(100)                                                 
-      REAL*8 LX(14)                                                     
-      REAL*4 LCM                                                        
+      character*8 LX(14)                                                     
+      character*4 LCM                                                        
 C****                              !Changes from here... !JDL 10-MAR-84
       INTEGER ID2(54), ID3(21), ID4(41), ID5(25), ID6(17),ID7(7),ID8(26)
       DATA ID2 / 11, 19, 29, 41, 51, 12, 20, 30, 42, 52, 13, 21, 31,    
@@ -6425,12 +6480,12 @@ C****
       LABEL(11) = LABEL(2*NVAX+16)
       LABEL(14) = LABEL(2*NHAX+15)
       LABEL(15) = LABEL(2*NHAX+16)
-      J=2
+C      J=2
       NFOLD=NRSV
       IF( NEN .EQ. 1 ) NFOLD = 1
       IF( MCP .NE. 0 ) NFOLD = NBMAX
       PRINT 188, NTITLE, DAET, TYME
-      CALL PPLOT( HORSV,VERSV,VERSV, NFOLD,NFOLD, NRMAX, LABEL, J, DD )
+      CALL PPLOT( HORSV,VERSV,VERSV, NFOLD,NFOLD, NRMAX, LABEL, 2, DD )
   188 FORMAT( 1H1, 10X, 20A4, 1X, 12H JDL/84.11  ,3X, 3A4, 2X, 2A4 )
       RETURN                                !...to here. !JDL  1-DEC-83
 C****                                                                   
@@ -6476,7 +6531,7 @@ C****
 C****                                                                   
 115     FORMAT (///, 10X, 'MAXIMUM STEPS EXCEEDED', /10X,               
      1   'ELEMENT = ', I4, /10X, 'REGION = ', I4 ///)                   
-        PRINT 115, NO, IN                                               
+C        PRINT 115, NO, IN                                               
         RETURN                                                          
 C****                                                                   
 C****                                                                   
@@ -6496,12 +6551,14 @@ c
       common  /blck60/  gas,agas,zgas,zion,press,gassig,qaver,  !***mp 1
      1                  qfwhm,rhogas,gask,emass,gasmfp,jray,q00,npasg   
       COMMON  /BLCK63/  ISEED
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
 C*****
 C*****
 C*****
       P1 = SIGC/SIGT
-      R = RAN(ISEED)
+      R = RAN(0)
 C
       Q1 = Q0 - 1.
       IF (R.GT.P1) Q1 = Q0 + 1.
@@ -6531,7 +6588,9 @@ c
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
       COMMON  /BLCK60/  GAS,AGAS,ZGAS,ZION,PRESS,GASSIG,QAVER,  !***MP 1
      1                  QFWHM,RHOGAS,GASK,EMASS,GASMFP,JRAY,Q00,NPASG   
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
 c
       DATA V0/2.189D8/
       DATA A/0.555/,DEL/1.175/,GAM/0.607/
@@ -6573,7 +6632,7 @@ c***** ref. Reiner Kruecken : expressions for low velocities
 c                             from Ninov
 c
          vbv0 = vel/v0
-         Q1=ZION*(1.0-1.04*exp(-0.91*vbv0*ZION**-0.66667))
+         Q1=ZION*(1.0-1.04*exp(-0.91*vbv0*ZION**(-0.66667)))
          Q2=(0.394*vbv0*ZION**0.33333) +1.65       
          qbar = Q1  
          if (vbv0.le.4. and. Q2.gt.Q1) qbar = Q2
@@ -6587,7 +6646,7 @@ c     From: G. Schiwietz : reference: G.Schiwietz, P.L.Grande; NIM B 175-177 (20
 c	JMF, August 2007
 c           
          VBV0 = VEL/V0
-	 BASE = VBV0*(ZION**-0.52)*(ZGAS**(0.03-0.017*(ZION**-0.52)*VBV0))
+	 BASE = VBV0*(ZION**(-0.52))*(ZGAS**(0.03-0.017*(ZION**(-0.52))*VBV0))
 	   POW = 1+0.4/ZION
 	   x = BASE**POW
 	   NUMER = ZION*(376*x+(x**6))
@@ -6598,7 +6657,7 @@ c
 	   W = 0.6
 	   F1 = ((QBAR + 0.37*(ZION**0.6))/QBAR)**0.5
 	   F2 = ((ZION - QBAR + 0.37*(ZION**0.6))/(ZION - QBAR))**0.5
-	   DENOM2 = (ZION**-0.27)*(ZGAS**(0.035-0.0009*ZION))*F1*F2
+	   DENOM2 = (ZION**(-0.27))*(ZGAS**(0.035-0.0009*ZION))*F1*F2
 	   DELSQR = (W/DENOM2)**2
 c
 c
@@ -6616,8 +6675,12 @@ c
      1                  QFWHM,RHOGAS,GASK,EMASS,GASMFP,JRAY,Q00,NPASG   
       COMMON  /BLCK62/  GASENE,GASVEL,TOLD,GASL
       COMMON  /BLCK63/  ISEED
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
       common  /blck70/  vel0,en0,pm0
+c-ddc
+      integer*8 icalc
+
       common  /blck71/  gasopt,zgas125,zgas18,dreldee,enold,icalc
 c     data v0/2.188d8/
 c*****************************************************************
@@ -6659,14 +6722,14 @@ C
       PARAMETER (A1=0.75269185)
       PARAMETER (A2=-0.15625983,A4=+0.021262254,A6=-0.024505330)
       PARAMETER (B0=1.0-(A2+A4+A6),B2=-0.14234502,B4=-0.016316285)
-      REAL*8    RANDOM
+      REAL*8    RANDOM,RND
 C
-      RANDOM=2.0*RAN(ISEED)-1.0
+      RANDOM=2.0*RAN(0)-1.0
       IF(K .EQ. 0) RETURN
-      RAND=RANDOM
-      Y=RAND**2
+      RND=RANDOM
+      Y=RND**2
       S1=SQRT(1.0-Y)
-      X=RAND*((((A6*Y+A4)*Y+A2)*Y)+B0+B2*S1+B4*SQRT(S1))
+      X=RND*((((A6*Y+A4)*Y+A2)*Y)+B0+B2*S1+B4*SQRT(S1))
       RANDOM=A1*LOG((1.0+X)/(1.0-X))
       RETURN
       END
@@ -6866,6 +6929,10 @@ C      FOR HYDROGEN AS PROJECTILE.
 C 
 C*****************************************
 C 
+c--ddc for compatability with shellc in other functions! 
+c(note.. compiler did not complain!)
+       IMPLICIT REAL*8(A-H,O-Z)
+
        DIMENSION SC(92)         
        COMMON /SHELLC/ SC       
        SC(1)=4.       
@@ -6905,6 +6972,9 @@ C      TABLES OF COEFFICIENTS
 C 
 C***************************************  
 C 
+c--ddc for datad in other units
+      IMPLICIT REAL*8(A-H,O-Z)
+
        DIMENSION AH1(92),AH2(92),AH3(92),AH4(92),   
      1 AH5(92),AH6(92),AH7(92)  
        DIMENSION A1(92),A2(92),A3(92),A4(92),A5(92),A6(92),A7(92),      
@@ -7671,6 +7741,7 @@ C**** FOLLOWED BY ROTATIONS ABOUT X, Y, Z   .
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
 c      REAL*4 DAET, TYME                                  !JDL 31-OCT-84
+
       include 'rtcomm0.f'
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
       COMMON  /BLCK 5/  XA, YA, ZA, VXA, VYA, VZA                       
@@ -7760,9 +7831,14 @@ C**** DATA  C/ 3.D10/
      1                  QFWHM,RHOGAS,GASK,EMASS,GASMFP,JRAY,Q00,NPASG   
       COMMON  /BLCK61/  DEDX,ALPHAK,TOLD2,DEDXQ
       COMMON  /BLCK62/  GASENE,GASVEL,TOLD,GASL
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
       COMMON  /BLCK66/  tfwopt,taufct,alffct,TBAR,THWHM,tau0
       common  /blck70/  vel0,en0,pm0
+c-ddc
+      integer*8 icalc
+
       common  /blck71/  gasopt,zgas125,zgas18,dreldee,enold,icalc
       dimension dlsc(120),dq(120)
       data aa/4.8/,beta/0.037/,bb/2.2/,gama/2.44d-5/,cc/2.6/
@@ -7876,7 +7952,9 @@ c
       subroutine smangsc
       IMPLICIT REAL*8(A-H,O-Z)                                          
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
       COMMON  /BLCK66/  tfwopt,taufct,alffct,TBAR,THWHM,tau0
       data ipr/0/
 c
@@ -7930,7 +8008,7 @@ C****
 C****                                                                   
       IMPLICIT REAL*8(A-H,O-Z)                                          
 c      REAL*4 DAET, TYME                                  !JDL 31-OCT-84
-      REAL*8  LF           , K, L                                       
+      REAL*8  LF, L, BX, BY, BZ, K, TC, DTC
       include 'rtcomm0.f'
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
       COMMON  /BLCK 5/  XA, YA, ZA, VXA, VYA, VZA                       
@@ -8118,7 +8196,9 @@ c
       COMMON  /BLCK 4/  ENERGY, VEL, PMASS, Q0                          
       COMMON  /BLCK60/  GAS,AGAS,ZGAS,ZION,PRESS,GASSIG,QAVER,  !***MP 1
      1                  QFWHM,RHOGAS,GASK,EMASS,GASMFP,JRAY,Q00,NPASG   
-      include 'rtcomm65.f'
+      COMMON  /BLCK65/ QBAR,DELSQR,ACAPT,ALOS,
+     $     NSK1,NSK2,SIGC,SIGT,ATBCC,qopt
+c      include 'rtcomm65.f'
 c
 c***** Betz *****
 c      DATA V0/2.189D8/, PI/3.14159/
@@ -8150,7 +8230,7 @@ C	CALCULATE VELOCITY
 c	BETA=SQRT(2*E/(FLOAT(IM)*931.478))
 c	Z=FLOAT(IZ)
 C	TYPE 903,Z
-903	FORMAT(F)
+C903	FORMAT(F)
 C	CALCULATE MAXIMUM CHARGE STATE
         beta=vel/c
         z=zion
@@ -8215,7 +8295,7 @@ c
       common  /BLCK63/ iseed
 c
       common /sqdiscm/ sqdminq, sqdp(21)
-      r=ran(iseed)
+      r=ran(0)
       q0=sqdminq
       i=1
    10 if (r.lt.sqdp(i).or.(i.ge.21).or.(q0.ge.zion)) return
@@ -8224,7 +8304,7 @@ c
       q0=q0+1.
       goto 10
       END
-       FUNCTION STOP(Z1,AA1,Z2,E)                                       
+      FUNCTION STOP(Z1,AA1,Z2,E)                                       
 C 
 C      CALCULATES:    
 C      - NUCLEAR STOPPING POWERS
@@ -8251,6 +8331,8 @@ C        DEDXN = NUCLEAR PART OF STOPPING POWER
 C 
 C******************************************************       
 C 
+      IMPLICIT REAL*8(A-H,O-Z)
+ 
        DIMENSION SC(92),AH1(92),AH2(92),AH3(92),AH4(92),      
      1 AH5(92),AH6(92),AH7(92)  
        DIMENSION A1(92),A2(92),A3(92),A4(92),A5(92),A6(92),A7(92),      
@@ -8288,11 +8370,11 @@ C
        IF(EPS.LT.0.01) GOTO 100 
        IF(EPS.GT.10) GOTO 110   
        EU=EXP(1.)     
-       DEDXN=1.7*SQRT(EPS)*ALOG(EPS+EU)/(1.+6.8*EPS+3.4*EPS**1.5)       
+       DEDXN=1.7*SQRT(EPS)*DLOG(EPS+EU)/(1.+6.8*EPS+3.4*EPS**1.5)       
        GOTO 120       
  100   DEDXN=1.593*SQRT(EPS)    
        GOTO 120       
- 110   DEDXN=0.5*ALOG(0.47*EPS)/EPS       
+ 110   DEDXN=0.5*DLOG(0.47*EPS)/EPS       
  120   DEDXN=8.462*Z1*Z2*AA1/A/Z*FAC*DEDXN
 C 
 C      MASTER ELECTRONIC STOPPING POWERS FOR HYDROGEN         
@@ -8302,10 +8384,10 @@ C
        IF(EH.GE.1000.) GOTO 200 
        IF(EH.LE.10.) GOTO 210   
        DEDXE=FAC/(1./AH2(K)/EH**0.45+     
-     1 EH/AH3(K)/ALOG(1.+AH4(K)/EH+AH5(K)*EH))      
+     1 EH/AH3(K)/DLOG(1.+AH4(K)/EH+AH5(K)*EH))      
        GOTO 220       
  200   BSQ=VOVC*VOVC  
-       DEDXE=FAC*AH6(K)/BSQ*ALOG(AH7(K)*BSQ/(1.-BSQ))+SC(K)/EH
+       DEDXE=FAC*AH6(K)/BSQ*DLOG(AH7(K)*BSQ/(1.-BSQ))+SC(K)/EH
        GOTO 220       
  210   DEDXE=FAC*AH1(K)*SQRT(EH)
  220   STOP=DEDXE+DEDXN         
@@ -8337,19 +8419,19 @@ C
  300   EHE=4.*VSQ     
 C      SOLID AND GASEOUS MATTER, HIGH ENERGIES      
        IF(EHE.LT.10.) GOTO 310  
-       E1=ALOG(1./EHE)
+       E1=DLOG(1./EHE)
        DEDXE=FAC*EXP(A6(K)+(A7(K)+(A8(K)+A9(K)*E1)*E1)*E1)    
        STOP=DEDXE+DEDXN         
        RETURN         
  310   IF(IM.LT.1) GOTO 320     
 C      SOLID MATTER, LOW ENERGIES         
        E1=(1000.*EHE)**A2(K)    
-       DEDXE=FAC/(1./E1/A1(K)+EHE/A3(K)/ALOG(1.+A4(K)/EHE+A5(K)*EHE))   
+       DEDXE=FAC/(1./E1/A1(K)+EHE/A3(K)/DLOG(1.+A4(K)/EHE+A5(K)*EHE))   
        STOP=DEDXE+DEDXN         
        RETURN         
 C      GASEOUS MATTER, LOW ENERGIES       
  320   E1=(1000.*EHE)**B2(K)    
-       DEDXE=FAC/(1./E1/B1(K)+EHE/B3(K)/ALOG(1.+B4(K)/EHE+B5(K)*EHE))   
+       DEDXE=FAC/(1./E1/B1(K)+EHE/B3(K)/DLOG(1.+B4(K)/EHE+B5(K)*EHE))   
        STOP=DEDXE+DEDXN         
        RETURN         
 C 
@@ -8388,6 +8470,7 @@ C        DEDXN = NUCLEAR PART OF STOPPING POWER
 C 
 C******************************************************       
 C 
+       IMPLICIT REAL*8(A-H,O-Z)
        DIMENSION SC(92),AH1(92),AH2(92),AH3(92),AH4(92),      
      1 AH5(92),AH6(92),AH7(92)  
        DIMENSION A1(92),A2(92),A3(92),A4(92),A5(92),A6(92),A7(92),      
@@ -8425,11 +8508,11 @@ C
        IF(EPS.LT.0.01) GOTO 100 
        IF(EPS.GT.10) GOTO 110   
        EU=EXP(1.)     
-       DEDXN=1.7*SQRT(EPS)*ALOG(EPS+EU)/(1.+6.8*EPS+3.4*EPS**1.5)       
+       DEDXN=1.7*SQRT(EPS)*DLOG(EPS+EU)/(1.+6.8*EPS+3.4*EPS**1.5)       
        GOTO 120       
  100   DEDXN=1.593*SQRT(EPS)    
        GOTO 120       
- 110   DEDXN=0.5*ALOG(0.47*EPS)/EPS       
+ 110   DEDXN=0.5*DLOG(0.47*EPS)/EPS       
  120   DEDXN=8.462*Z1*Z2*AA1/A/Z*FAC*DEDXN
 C 
 C      MASTER ELECTRONIC STOPPING POWERS FOR HYDROGEN         
@@ -8439,10 +8522,10 @@ C
        IF(EH.GE.1000.) GOTO 200 
        IF(EH.LE.10.) GOTO 210   
        DEDXE=FAC/(1./AH2(K)/EH**0.45+     
-     1 EH/AH3(K)/ALOG(1.+AH4(K)/EH+AH5(K)*EH))      
+     1 EH/AH3(K)/DLOG(1.+AH4(K)/EH+AH5(K)*EH))      
        GOTO 220       
  200   BSQ=VOVC*VOVC  
-       DEDXE=FAC*AH6(K)/BSQ*ALOG(AH7(K)*BSQ/(1.-BSQ))+SC(K)/EH
+       DEDXE=FAC*AH6(K)/BSQ*DLOG(AH7(K)*BSQ/(1.-BSQ))+SC(K)/EH
        GOTO 220       
  210   DEDXE=FAC*AH1(K)*SQRT(EH)
  220   STOPS=DEDXE+DEDXN         
@@ -8474,19 +8557,19 @@ C
  300   EHE=4.*VSQ     
 C      SOLID AND GASEOUS MATTER, HIGH ENERGIES      
        IF(EHE.LT.10.) GOTO 310  
-       E1=ALOG(1./EHE)
+       E1=DLOG(1./EHE)
        DEDXE=FAC*EXP(A6(K)+(A7(K)+(A8(K)+A9(K)*E1)*E1)*E1)    
        STOPS=DEDXE+DEDXN         
        RETURN         
  310   IF(IM.LT.1) GOTO 320     
 C      SOLID MATTER, LOW ENERGIES         
        E1=(1000.*EHE)**A2(K)    
-       DEDXE=FAC/(1./E1/A1(K)+EHE/A3(K)/ALOG(1.+A4(K)/EHE+A5(K)*EHE))   
+       DEDXE=FAC/(1./E1/A1(K)+EHE/A3(K)/DLOG(1.+A4(K)/EHE+A5(K)*EHE))   
        STOPS=DEDXE+DEDXN         
        RETURN         
 C      GASEOUS MATTER, LOW ENERGIES       
  320   E1=(1000.*EHE)**B2(K)    
-       DEDXE=FAC/(1./E1/B1(K)+EHE/B3(K)/ALOG(1.+B4(K)/EHE+B5(K)*EHE))   
+       DEDXE=FAC/(1./E1/B1(K)+EHE/B3(K)/DLOG(1.+B4(K)/EHE+B5(K)*EHE))   
        STOPS=DEDXE+DEDXN         
        RETURN         
 C 
@@ -8506,7 +8589,7 @@ C****
 C****                                                                   
       IMPLICIT  REAL*8 (A-H,O-Z)                                        
 c      REAL*4 DAET, TYME                                  !JDL 31-OCT-84
-      REAL*8  K,LF1,LU1,LF2,L                                           
+      REAL*8 LF1,LU1,LF2,L,BX, BY, BZ, K, TC, DTC
       EXTERNAL BEVC                                                     
       include 'rtcomm0.f'
       COMMON /BLCK 4/  ENERGY, VEL, PMASS, Q0                           
