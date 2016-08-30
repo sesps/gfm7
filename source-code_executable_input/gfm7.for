@@ -5574,7 +5574,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3)  .GE.  Z21 )  GO TO 11                                  
    10 CONTINUE                                                          
       GO TO 9                                                           
@@ -5614,7 +5614,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( TC(3) .GE. Z22 )  GO TO 14                                    
    13 CONTINUE                                                          
       GO TO 12                                                          
@@ -8096,7 +8096,7 @@ C****
       TPAR = T*VEL
       NBR = 2
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       IF( (Z22+AL) .LE. TC(3) ) GO TO 8                                 
     7 CONTINUE                                                          
       GO TO 6                                                           
@@ -8706,7 +8706,7 @@ C****
       TPAR = T*VEL
       NBR = 2
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       TDIST = TDIST + DTF1*VEL                                          
       IF ( Z12 .GE. TC(3) ) GO TO 8                                     
     7 CONTINUE                                                          
@@ -8746,7 +8746,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       TDIST = TDIST + DTU*VEL                                           
       IF ( TC(3) .GE. Z21 ) GO TO 11                                    
    10 CONTINUE                                                          
@@ -8793,7 +8793,7 @@ C****
       TPAR = T*VEL
       NBR = 3
       CALL PLT1 ( NUM, NO, NBR, TPAR )
-        IF (NSTEP  .GT.  10000)  GO TO 99                               
+        IF (NSTEP  .GT.  100000)  GO TO 99                               
       TDIST = TDIST + DTF2*VEL                                          
       IF ( TC(3) .GE. Z22 ) GO TO 14                                    
    13 CONTINUE                                                          
