@@ -1,0 +1,1 @@
+copy *.mca output.mca
