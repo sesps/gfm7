@@ -1,9 +1,8 @@
-1.   1.   4.   .001 2.   My   15.       0.0       -0.074    0.153     -1        GAS,QOPT,AGAS,TFOIL,ZGAS,FOIL,ZION,PRESS,GASOPT,ACAPT,TFWOPT
 SHRT                Correction (ENGE ?)
-0.        0.        0.        0.        1.        0.
+0.        0.        0.        0.        1.        0.        X0,Y0,Z0,PSIX,PSIY,PSIZ
 DIPOLE              1st DIPOLE  
 1.0       1.0       1.0       1.0       2.0       LF1, LU1, LF2, DG1, MTYP     2
-60.000    14.000    3.81      50.8      0.6000    A, B, D, R, BF               3
+60.000    14.000    3.81      50.8      0.73      A, B, D, R, BF               3
 40.0      37.       14.                           PHI, ALPHA, BETA             4
 0.0       0.0       0.0       0.0       -20.0     +20.0     NDX,B,G,D,XS1,XS2  5
 10.0      -8.00     -10.0     10.0                          Z11, Z12, Z21, Z22 6
@@ -15,7 +14,7 @@ DIPOLE              1st DIPOLE
 0.0       +0.000    0.0       0.0       0.0       0.0       0.0       S12-S17 12
 DIPOLE              2nd DIPOLE  
 1.0       1.0       1.0       1.0       2.0       LF1, LU1, LF2, DG1, MTYP     2
-14.000    60.000    3.81      50.8      0.6000    A, B, D, R, BF               3
+14.000    60.000    3.81      50.8      0.73      A, B, D, R, BF               3
 74.0      35.       -19.                          PHI, ALPHA, BETA             4
 0.0       0.0       0.0       0.0       -20.0     +20.0     NDX,B,G,D,XS1,XS2  5
 10.0      -8.00     -8.0      20.0                          Z11, Z12, Z21, Z22 6
